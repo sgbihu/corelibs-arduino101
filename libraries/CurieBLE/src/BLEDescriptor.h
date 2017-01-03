@@ -43,6 +43,8 @@ class BLEDescriptor
     virtual int valueLength() const; // returns the current length of the value
     
     virtual operator bool() const;  // is the descriptor valid (discovered from peripheral)
+    
+    bool read();
 
     unsigned char properties() const;
     int valueSize() const;
@@ -52,58 +54,9 @@ private:
     
     unsigned char _properties;      // The characteristic property
     
-    unsigned short _value_size;       // The value size
+    unsigned short _value_size;     // The value size
     unsigned char* _value;          // The value. Will delete after create the _internal
-
-
-    // The API reserved for feature release
-    // move here for temp
-    
-    /**
-     * @brief   Write the value of the descriptor
-     *
-     * @param   value   The value buffer that want to write to descriptor
-     *
-     * @param   length  The value buffer's length
-     *
-     * @return  bool    true - Success, false - Failed
-     *
-     * @note  none
-     */
-    //virtual bool writeValue(const byte value[], int length);
-    
-    /**
-     * @brief   Write the value of the descriptor
-     *
-     * @param   value   The value buffer that want to write to descriptor
-     *
-     * @param   length  The value buffer's length
-     *
-     * @param   offset  The offset in the descriptor's data
-     *
-     * @return  bool    true - Success, false - Failed
-     *
-     * @note  none
-     */
-    //bool writeValue(const byte value[], int length, int offset);
-    
-    /**
-     * @brief   Write the value of the descriptor
-     *
-     * @param   value   The value string that want to write to descriptor
-     *
-     * @return  bool    true - Success, false - Failed
-     *
-     * @note  none
-     */
-    //bool writeValue(const char* value);
-    //virtual byte operator[] (int offset) const; // returns a byte of the value at the specified offset
-
-    // GATT client Write the value of the descriptor
-    //virtual bool write(const byte value[], int length);
-    //bool write(const byte value[], int length, int offset);
-    //bool write(const char* value);
-    //bool read();
+    BLEDescriptorImp *_internal;    // The real implementation of Descriptor
 };
 
 #endif

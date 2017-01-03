@@ -65,6 +65,22 @@ public:
     unsigned char operator[] (int offset) const;
     unsigned char properties() const;
     int valueSize() const;
+    uint16_t valueHandle() const;
+    /**
+     * @brief   Write the value of the descriptor
+     *
+     * @param   value   The value buffer that want to write to descriptor
+     *
+     * @param   length  The value buffer's length
+     *
+     * @param   offset  The offset in the descriptor's data
+     *
+     * @return  bool    true - Success, false - Failed
+     *
+     * @note  none
+     */
+    bool writeValue(const byte value[], int length, int offset);
+    bool read();
 
 protected:
 
@@ -75,9 +91,12 @@ private:
     unsigned char* _value;
     unsigned char _properties;      // The characteristic property
     
-    bt_uuid_128 _descriptor_uuid;
-    
     BLEDevice _bledev; 
+    
+    bool _reading;
+    bt_gatt_read_params_t _read_params; // GATT read parameter
+    
+    bt_gatt_attr_t *_attr_desc_value;   // GATT server only
 };
 
 #endif // _BLE_DESCRIPTOR_H_INCLUDED

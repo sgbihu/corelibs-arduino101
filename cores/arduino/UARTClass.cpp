@@ -179,7 +179,7 @@ size_t UARTClass::write( const uint8_t uc_data )
     return(0);
 
   // Is the hardware currently busy?
-  if (_tx_buffer->_iTail != _tx_buffer->_iHead || !uart_tx_ready(CONFIG_UART_CONSOLE_INDEX))
+  if (_tx_buffer->_iTail != _tx_buffer->_iHead)
   {
     // If busy we buffer
     int l = (_tx_buffer->_iHead + 1) % UART_BUFFER_SIZE;
@@ -215,13 +215,13 @@ void UARTClass::IrqHandler( void )
   }
 
   // if irq is Transmitter Holding Register
-  else if(uart_irq_tx_ready(CONFIG_UART_CONSOLE_INDEX))
+  if(uart_irq_tx_ready(CONFIG_UART_CONSOLE_INDEX))
   {
     if(_tx_buffer->_iTail != _tx_buffer->_iHead)
     {
-      int end = (_tx_buffer->_iTail < _tx_buffer->_iHead) ? _tx_buffer->_iHead:UART_BUFFER_SIZE;
+      int end = (_tx_buffer->_iTail < _tx_buffer->_iHead) ? _tx_buffer->_iHead : UART_BUFFER_SIZE;
       int l = min(end - _tx_buffer->_iTail, UART_FIFO_SIZE);
-      uart_fifo_fill(CONFIG_UART_CONSOLE_INDEX, _tx_buffer->_aucBuffer+_tx_buffer->_iTail, l);
+      l = uart_fifo_fill(CONFIG_UART_CONSOLE_INDEX, _tx_buffer->_aucBuffer+_tx_buffer->_iTail, l);
       _tx_buffer->_iTail = (_tx_buffer->_iTail+l)%UART_BUFFER_SIZE;
     }
     else
