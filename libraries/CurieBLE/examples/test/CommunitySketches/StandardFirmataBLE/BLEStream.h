@@ -87,7 +87,10 @@ BLEStream::BLEStream(unsigned char req, unsigned char rdy, unsigned char rst) :
   this->_flushed = 0;
   this->_flushInterval = BLESTREAM_TXBUFFER_FLUSH_INTERVAL;
   BLEStream::_instance = this;
+}
 
+void BLEStream::begin(...)
+{
   addAttribute(this->_uartService);
   addAttribute(this->_uartNameDescriptor);
   setAdvertisedServiceUuid(this->_uartService.uuid());
@@ -96,11 +99,9 @@ BLEStream::BLEStream(unsigned char req, unsigned char rdy, unsigned char rst) :
   this->_rxCharacteristic.setEventHandler(BLEWritten, BLEStream::_received);
   addAttribute(this->_txCharacteristic);
   addAttribute(this->_txNameDescriptor);
-}
-
-void BLEStream::begin(...)
-{
+  
   BLEPeripheral::begin();
+
 #ifdef BLE_SERIAL_DEBUG
   Serial.println(F("BLEStream::begin()"));
 #endif
