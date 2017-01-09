@@ -77,6 +77,7 @@ BLEDeviceManager::BLEDeviceManager():
     memset(_peer_adv_mill, 0, sizeof(_peer_adv_mill));
     memset(&_adv_accept_critical, 0, sizeof(_adv_accept_critical));
     memset(&_adv_critical_service_uuid, 0, sizeof(_adv_critical_service_uuid));
+    memset(&_adv_accept_device, 0, sizeof(_adv_accept_device));
     
     memset(_peer_peripheral, 0, sizeof(_peer_peripheral));
     memset(_peer_peripheral_adv_data, 0, sizeof(_peer_peripheral_adv_data));
@@ -562,6 +563,7 @@ bool BLEDeviceManager::stopScanning()
 void BLEDeviceManager::clearAdvertiseCritical()
 {
     memset(&_adv_accept_critical, 0, sizeof(_adv_accept_critical));
+    memset(&_adv_accept_device, 0, sizeof(_adv_accept_device));
     //memset(&_adv_critical_service_uuid, 0, sizeof(_adv_critical_service_uuid));
 }
 
@@ -596,6 +598,64 @@ void BLEDeviceManager::setAdvertiseCritical(BLEService& service)
     _adv_accept_critical.type = type;
     _adv_accept_critical.data_len = length;
     _adv_accept_critical.data = data;
+}
+
+void BLEDeviceManager::setAdvertiseCritical(const char* macaddress)
+{
+    BLEUtils::macAddressString2BT(macaddress, _adv_accept_device);
+}
+
+bool BLEDeviceManager::getDataFromAdvertiseByType(const BLEDevice* device,
+                                                  const uint8_t eir_type, 
+                                                  const uint8_t* &data,
+                                                  uint8_t &data_len) const
+{
+    const uint8_t* adv_data = NULL;
+    uint8_t adv_data_len = 0;
+    bool retval = false;
+    bool scan_response_proced = false;
+    
+    getDeviceAdvertiseBuffer(device->bt_le_address(),
+                             adv_data,
+                             adv_data_len);
+
+    while (NULL != adv_data)
+    {
+        while (adv_data_len > 1)
+        {
+            uint8_t len = adv_data[0];
+            uint8_t type = adv_data[1];
+
+            /* Check for early termination */
+            if ((len == 0) || ((len + 1) > adv_data_len)) {
+                break;
+            }
+
+            if (type == eir_type)
+            {
+                if (len >= BLE_MAX_ADV_SIZE)
+                {
+                    len = BLE_MAX_ADV_SIZE-1;
+                }
+                data = &adv_data[2];
+                data_len = len - 1;
+                retval = true;
+                break;
+            }
+
+            adv_data_len -= len + 1;
+            adv_data += len + 1;
+        }
+        if (retval == true || scan_response_proced == true)
+        {
+            break;
+        }
+        getDeviceScanResponseBuffer(device->bt_le_address(),
+                                    adv_data,
+                                    adv_data_len);
+        scan_response_proced = true;
+    }
+    return retval;
 }
 
 bool BLEDeviceManager::hasLocalName(const BLEDevice* device) const
@@ -1249,6 +1309,13 @@ void BLEDeviceManager::handleDeviceFound(const bt_addr_le_t *addr,
     if (type == BT_LE_ADV_IND || type == BT_LE_ADV_DIRECT_IND)
     {
         //pr_debug(LOG_MODULE_BLE, "%s-%d", __FUNCTION__, __LINE__);
+        // Filter address
+        if (BLEUtils::macAddressValid(_adv_accept_device) == true && 
+		   (memcmp(addr->val, _adv_accept_device.val, sizeof (addr->val)) != 0))
+        {
+            return;
+        }
+        
         while (data_len > 1)
         {
             uint8_t len = data[0];
