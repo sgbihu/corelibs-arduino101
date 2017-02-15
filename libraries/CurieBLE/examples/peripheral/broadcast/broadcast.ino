@@ -1,6 +1,6 @@
 #include <CurieBLE.h>
 
-uint8_t value = 0;
+short value = 0;
 
 BLEService service = BLEService("EEE0");
 BLEShortCharacteristic characteristic = BLEShortCharacteristic("EEE1", BLERead | BLENotify | BLEBroadcast);
@@ -8,7 +8,7 @@ BLEShortCharacteristic characteristic = BLEShortCharacteristic("EEE1", BLERead |
 void setup() {
   Serial.begin(9600);
 
-  BLE.setLocalName("BLEBroadcast");
+  BLE.setLocalName("Broadcast");
   BLE.setAdvertisedServiceUuid(service.uuid());
 
   BLE.addService(service);
@@ -19,7 +19,7 @@ void setup() {
   BLE.begin();
   characteristic.broadcast();
 
-  Serial.println(F("BLE Broadcast Count"));
+  Serial.println(F("BLE Broadcast Test Sketch"));
 }
 
 void loop() {
@@ -28,3 +28,5 @@ void loop() {
     delay(1000);
     value++;
 }
+
+
