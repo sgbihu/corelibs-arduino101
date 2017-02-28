@@ -297,21 +297,10 @@ void rpc_transmit_cb(uint8_t *p_buf, uint16_t length)
  * other constraints: therefore, this reset might not work everytime, especially after
  * flashing or debugging.
  */
-void nble_driver_init(void)
+void nble_driver_hw_reset(void)
 {
     uint32_t delay_until;
-    
-    nble_interface_init();
-    /* Setup UART0 for BLE communication, HW flow control required  */
-    SET_PIN_MODE(18, QRK_PMUX_SEL_MODEA); /* UART0_RXD        */
-    SET_PIN_MODE(19, QRK_PMUX_SEL_MODEA); /* UART0_TXD        */
-    SET_PIN_MODE(40, QRK_PMUX_SEL_MODEB); /* UART0_CTS_B      */
-    SET_PIN_MODE(41, QRK_PMUX_SEL_MODEB); /* UART0_RTS_B      */
-    
-	ipc_uart_init(0);
-	
-    //while (1)
-    //{}
+
 	/* RESET_PIN depends on the board and the local configuration: check top of file */
 	gpio_cfg_data_t pin_cfg = { .gpio_type = GPIO_OUTPUT };
     
@@ -334,6 +323,23 @@ void nble_driver_init(void)
 	/* Set back GPIO to input to avoid interfering with external debugger */
 	pin_cfg.gpio_type = GPIO_INPUT;
 	soc_gpio_set_config(SOC_GPIO_32, RESET_PIN, &pin_cfg);
+}
+
+void nble_driver_init(void)
+{
+    
+    nble_interface_init();
+    /* Setup UART0 for BLE communication, HW flow control required  */
+    SET_PIN_MODE(18, QRK_PMUX_SEL_MODEA); /* UART0_RXD        */
+    SET_PIN_MODE(19, QRK_PMUX_SEL_MODEA); /* UART0_TXD        */
+    SET_PIN_MODE(40, QRK_PMUX_SEL_MODEB); /* UART0_CTS_B      */
+    SET_PIN_MODE(41, QRK_PMUX_SEL_MODEB); /* UART0_RTS_B      */
+    
+	ipc_uart_init(0);
+	
+    //while (1)
+    //{}
+    nble_driver_hw_reset();
 }
 
 
