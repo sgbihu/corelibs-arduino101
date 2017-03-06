@@ -304,12 +304,17 @@ void nble_driver_hw_reset(void)
 	/* RESET_PIN depends on the board and the local configuration: check top of file */
 	gpio_cfg_data_t pin_cfg = { .gpio_type = GPIO_OUTPUT };
     
+	delay_until = get_uptime_32k() + 32768 * 2; // 2ms wait for Nordic chip boot
+	while (get_uptime_32k() < delay_until);
+	
+	ipc_uart_init(0);
+    
 	soc_gpio_set_config(SOC_GPIO_32, RESET_PIN, &pin_cfg);
     //soc_gpio_set_config(SOC_GPIO_32_ID, BLE_SW_CLK_PIN, &pin_cfg);
 	/* Reset hold time is 0.2us (normal) or 100us (SWD debug) */
 	soc_gpio_write(SOC_GPIO_32, RESET_PIN, 0);
 	/* Wait for ~1ms */
-	delay_until = get_uptime_32k() + 32768;
+	delay_until = get_uptime_32k() + 327;//68;
 	
 	/* Open the UART channel for RPC while Nordic is in reset */
 	m_rpc_channel = ipc_uart_channel_open(RPC_CHANNEL, uart_ipc_rpc_cback);
@@ -335,7 +340,6 @@ void nble_driver_init(void)
     SET_PIN_MODE(40, QRK_PMUX_SEL_MODEB); /* UART0_CTS_B      */
     SET_PIN_MODE(41, QRK_PMUX_SEL_MODEB); /* UART0_RTS_B      */
     
-	ipc_uart_init(0);
 	
     //while (1)
     //{}

@@ -285,7 +285,7 @@ void ble_cfw_service_init(int service_id, T_QUEUE queue)
     do{
         
         uint32_t time_stamp_current = get_uptime_ms();
-        if (time_stamp_current - time_stamp_last > 2000)
+        if (time_stamp_current - time_stamp_last > 3000)
         {
             nble_driver_hw_reset();
             //pr_warning(LOG_MODULE_BLE, "time_stamp_current %d", time_stamp_current);
