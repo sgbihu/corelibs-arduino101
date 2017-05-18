@@ -214,6 +214,7 @@ protected:
     int getAttributeCount();
     
     bool longCharacteristic();
+    void postponeEventProcess(int event_type);
     
 #ifdef TD_V3
     void setBuffer(const uint8_t value[], 

@@ -217,7 +217,7 @@ bool BLEDescriptorImp::read()
         delay(5);
         ret_bool = _bledev.connected();
     }
-    return _reading;
+    return ret_bool;
 }
 
 bool BLEDescriptorImp::writeValue(const byte value[], 

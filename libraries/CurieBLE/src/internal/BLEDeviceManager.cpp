@@ -56,7 +56,8 @@ BLEDeviceManager::BLEDeviceManager():
     _peer_peripheral_index(0),
     _duplicate_filter_header(0),
     _duplicate_filter_tail(0),
-    _adv_duplicate_filter_enabled(false)
+    _adv_duplicate_filter_enabled(false),
+    _postpone_events(4)
 {
     memset(&_local_bda, 0, sizeof(_local_bda));
     
@@ -161,6 +162,20 @@ void BLEDeviceManager::poll()
             _device_events[BLEDiscovered](tempdev);
             tempdev = available();
         }
+    }
+    // Process postpone event
+    BLEDevicePostponeEvent*event;
+    while (1)
+    {
+        event = _postpone_events.getEvent();
+        if (NULL == event)
+        {
+            break;
+        }
+        BLEDevice tempdev(&event->address);
+        _device_events[event->event_type](tempdev);
+        
+        _postpone_events.removeEvent(event);
     }
 }
 
@@ -1318,6 +1333,17 @@ void BLEDeviceManager::setEventHandler(BLEDeviceEvent event,
         _device_events[event] = eventHandler;
 }
 
+void BLEDeviceManager::postponeEvent(const bt_addr_le_t *addr, int event_type)
+{
+    BLEDevicePostponeEvent event;
+    event.event_type = event_type;
+    bt_addr_le_copy(&event.address, addr);
+    if (false == _postpone_events.addEvent(&event))
+    {
+        pr_info(LOG_MODULE_BLE, "Add event failed will lost event [%d]", event_type);
+    }
+}
+
 void BLEDeviceManager::handleConnectEvent(bt_conn_t *conn, uint8_t err)
 {
     struct bt_conn_info role_info;
@@ -1336,11 +1362,12 @@ void BLEDeviceManager::handleConnectEvent(bt_conn_t *conn, uint8_t err)
     }
     // The peripheral and central can work as GATT server. Reserve one buffer for peer device
     BLEProfileManager::instance()->handleConnectedEvent(bt_conn_get_dst(conn));
-    
+
     if (NULL != _device_events[BLEConnected])
     {
-        BLEDevice tempdev(bt_conn_get_dst(conn));
-        _device_events[BLEConnected](tempdev);
+        postponeEvent(bt_conn_get_dst(conn), BLEConnected);
+        //BLEDevice tempdev(bt_conn_get_dst(conn));
+        //_device_events[BLEConnected](tempdev);
     }
 }
 
@@ -1378,8 +1405,9 @@ void BLEDeviceManager::handleDisconnectEvent(bt_conn_t *conn, uint8_t reason)
     
     if (NULL != _device_events[BLEDisconnected])
     {
-        BLEDevice tempdev(bt_conn_get_dst(conn));
-        _device_events[BLEDisconnected](tempdev);
+        postponeEvent(bt_conn_get_dst(conn), BLEDisconnected);
+        //BLEDevice tempdev(bt_conn_get_dst(conn));
+        //_device_events[BLEDisconnected](tempdev);
     }
 }
 
@@ -1390,8 +1418,9 @@ void BLEDeviceManager::handleParamUpdated (bt_conn_t *conn,
 {
     if (NULL != _device_events[BLEConParamUpdate])
     {
-        BLEDevice tempdev(bt_conn_get_dst(conn));
-        _device_events[BLEConParamUpdate](tempdev);
+        postponeEvent(bt_conn_get_dst(conn), BLEConParamUpdate);
+        //BLEDevice tempdev(bt_conn_get_dst(conn));
+        //_device_events[BLEConParamUpdate](tempdev);
     }
 }
 

@@ -53,7 +53,8 @@ BLEProfileManager::BLEProfileManager ():
     _attr_base(NULL),
     _attr_index(0),
     _profile_registered(false),
-    _disconnect_bitmap(0)
+    _disconnect_bitmap(0),
+    _postpone_charc_events(5)
 {
     //memset(_service_header_array, 0, sizeof(_service_header_array));
     memset(_discover_params, 0, sizeof(_discover_params));
@@ -1093,5 +1094,42 @@ String BLEProfileManager::getDeviceName(const BLEDevice* device)
     temp = device_name_buff;
     
     return temp;
+}
+
+void BLEProfileManager::postponeCharacteristicEvent(int event_type, 
+                                                    const bt_addr_le_t* address,
+                                                    BLECharacteristicImp* charc)
+{
+    BLECharacteristicPostponeEvent event;
+    event.event_type = event_type;
+    event.charcimp = charc;
+    bt_addr_le_copy(&event.address, address);
+    if (false == _postpone_charc_events.addEvent(&event))
+    {
+        pr_info(LOG_MODULE_BLE, "Add characteristic event failed will lost event [%d]", event_type);
+    }
+    pr_info(LOG_MODULE_BLE, "%s-%d", __FUNCTION__, __LINE__);
+}
+
+void BLEProfileManager::poll()
+{
+    // Process postpone event
+    BLECharacteristicPostponeEvent* event;
+    while (1)
+    {
+        event = _postpone_charc_events.getEvent();
+        if (NULL == event)
+        {
+            break;
+        }
+
+        BLEDevice tempdev(&event->address);
+        if (tempdev.connected() || BLEUtils::isLocalBLE(tempdev))
+        {
+            // Connect lost will make the BLECharacteristicImp* access invalid memory
+            event->charcimp->postponeEventProcess(event->event_type);
+        }
+        _postpone_charc_events.removeEvent(event);
+    }
 }
 

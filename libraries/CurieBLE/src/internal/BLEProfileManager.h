@@ -23,6 +23,7 @@
 #include "CurieBLE.h"
 
 #include "BLEServiceImp.h"
+#include "PostponeEventBuffer.h"
 
 //#include "BLECommon.h"
 //#include "BLEDevice.h"
@@ -135,6 +136,11 @@ public:
     unsigned short getAppearance();
 
     String getDeviceName(const BLEDevice* device);
+    void poll();
+    void postponeCharacteristicEvent(int event_type, 
+                                     const bt_addr_le_t* address,
+                                     BLECharacteristicImp* charc);
+    
 protected:
     friend ssize_t profile_write_process(bt_conn_t *conn,
                                      const bt_gatt_attr_t *attr,
@@ -149,7 +155,13 @@ private:
     typedef LinkNode<ServiceRead_t> ServiceReadLinkNodeHeader;
     typedef LinkNode<ServiceRead_t>* ServiceReadLinkNodePtr;
     typedef LinkNode<ServiceRead_t> ServiceReadLinkNode;
-    
+
+    struct BLECharacteristicPostponeEvent{
+        bt_addr_le_t address;
+        int event_type;
+        BLECharacteristicImp* charcimp;
+    };
+private:
     BLEProfileManager();
     ~BLEProfileManager (void);
     
@@ -245,6 +257,7 @@ private:
     static BLEProfileManager* _instance; // The profile manager instance
     bool _profile_registered;
     uint8_t _disconnect_bitmap;
+    PostponeEventBuffer<BLECharacteristicPostponeEvent> _postpone_charc_events;
 };
 
 #endif

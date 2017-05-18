@@ -69,6 +69,7 @@ void BLEDevice::poll()
 {
     BLEProfileManager::instance()->handleDisconnectedPutOffEvent();
     BLEDeviceManager::instance()->poll();
+    BLEProfileManager::instance()->poll();
 }
 
 void BLEDevice::end()

@@ -21,7 +21,7 @@
 #include "BLEAttribute.h"
 #include "BLEServiceImp.h"
 #include "BLECharacteristicImp.h"
-
+#include "BLEProfileManager.h"
 #include "BLECallbacks.h"
 #include "BLEUtils.h"
 
@@ -226,45 +226,58 @@ bool BLECharacteristicImp::writeValue(const byte value[], int length, int offset
     return retVal;
 }
 
+void BLECharacteristicImp::postponeEventProcess(int event_type)
+{
+    if (event_type >= BLECharacteristicEventLast)
+    {
+        return;
+    }
+    
+    if (NULL != _event_handlers[event_type]) 
+    {
+        BLECharacteristic chrcTmp(this, &_ble_device);
+        _event_handlers[event_type](_ble_device, chrcTmp);
+    }
+    
+    if (NULL != _oldevent_handlers[event_type]) 
+    {
+        BLECharacteristic chrcTmp(this, &_ble_device);
+        BLECentral central(_ble_device);
+        _oldevent_handlers[event_type](central, chrcTmp);
+    }
+}
+
 void BLECharacteristicImp::triggerValueUpdatedEvent()
 {
+    // Value doesn't update
+    if (false == _value_updated)
+    {
+        return;
+    }
+    BLECharacteristicEventHandler event_handle = NULL;
+    BLECharacteristicEventHandlerOld old_event_handle = NULL;
+    int event_type = 0;
+    
     if (BLEUtils::isLocalBLE(_ble_device) == true)
     {
         // GATT server
         // Write request for GATT server
-        if (_value_updated)
-        {
-            if (_event_handlers[BLEWritten]) 
-            {
-                BLECharacteristic chrcTmp(this, &_ble_device);
-                _event_handlers[BLEWritten](_ble_device, chrcTmp);
-            }
-            
-            if (_oldevent_handlers[BLEWritten]) 
-            {
-                BLECharacteristic chrcTmp(this, &_ble_device);
-                BLECentral central(_ble_device);
-                _oldevent_handlers[BLEWritten](central, chrcTmp);
-            }
-        }
+        event_type = BLEWritten;
+        event_handle = _event_handlers[BLEWritten];
+        old_event_handle = _oldevent_handlers[BLEWritten];
     }
     else
     {
-        if (_value_updated)
-        {
-            if (_event_handlers[BLEValueUpdated]) 
-            {
-                BLECharacteristic chrcTmp(this, &_ble_device);
-                _event_handlers[BLEValueUpdated](_ble_device, chrcTmp);
-            }
-            
-            if (_oldevent_handlers[BLEValueUpdated]) 
-            {
-                BLECharacteristic chrcTmp(this, &_ble_device);
-                BLECentral central(_ble_device);
-                _oldevent_handlers[BLEValueUpdated](central, chrcTmp);
-            }
-        }
+        event_type = BLEValueUpdated;
+        event_handle = _event_handlers[BLEValueUpdated];
+        old_event_handle = _oldevent_handlers[BLEValueUpdated];
+    }
+    
+    if (event_handle || old_event_handle) 
+    {
+        BLEProfileManager::instance()->postponeCharacteristicEvent(event_type,
+                                                    _ble_device.bt_le_address(),
+                                                    this);
     }
 }
 
@@ -750,10 +763,12 @@ bool BLECharacteristicImp::write(const unsigned char value[],
         retval = bt_gatt_write(conn, &params);
         if (0 == retval)
         {
+            bool connected = true;
             // Wait for write response
-            while (_gattc_writing)
+            while (_gattc_writing && connected)
             {
                 delay(2);
+                connected = _ble_device.connected();
             }
             write_process_result = _gattc_write_result;
         }
@@ -1116,17 +1131,11 @@ void BLECharacteristicImp::cccdValueChanged()
         event = BLESubscribed;
     }
 
-    if (_event_handlers[event]) 
+    if (_event_handlers[event] || _oldevent_handlers[event]) 
     {
-        BLECharacteristic chrcTmp(this, &_ble_device);
-        _event_handlers[event](_ble_device, chrcTmp);
-    }
-
-    if (_oldevent_handlers[event]) 
-    {
-        BLECharacteristic chrcTmp(this, &_ble_device);
-        BLECentral central(_ble_device);
-        _oldevent_handlers[event](central, chrcTmp);
+        BLEProfileManager::instance()->postponeCharacteristicEvent(event,
+                                                    _ble_device.bt_le_address(),
+                                                    this);
     }
 }
 

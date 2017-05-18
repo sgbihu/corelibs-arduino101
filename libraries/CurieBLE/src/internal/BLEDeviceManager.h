@@ -22,6 +22,8 @@
 
 #include <Arduino.h>
 
+#include "PostponeEventBuffer.h"
+
 class BLEDeviceManager
 {
   public:
@@ -386,7 +388,23 @@ private:
                                 bool connectable);
     uint8_t getTempAdvertiseIndexFromBuffer(const bt_addr_le_t* bt_addr);
     bool startScaning();
-
+    void postponeEvent(const bt_addr_le_t *addr, int event_type);
+private:
+    // Types
+    
+    // Peripheral states
+    enum BLEPeripheralState {
+        BLE_PERIPH_STATE_NOT_READY = 0,
+        BLE_PERIPH_STATE_READY,
+        BLE_PERIPH_STATE_ADVERTISING,
+        BLE_PERIPH_STATE_CONNECTED,
+    };
+    
+    struct BLEDevicePostponeEvent{
+        bt_addr_le_t address;
+        int event_type;
+    };
+    
 private:
     uint16_t   _min_conn_interval;
     uint16_t   _max_conn_interval;
@@ -454,13 +472,6 @@ private:
     size_t      _scan_rsp_data_idx;
     
     String      _local_name;
-    // Peripheral states
-    enum BLEPeripheralState {
-        BLE_PERIPH_STATE_NOT_READY = 0,
-        BLE_PERIPH_STATE_READY,
-        BLE_PERIPH_STATE_ADVERTISING,
-        BLE_PERIPH_STATE_CONNECTED,
-    };
 
     BLEPeripheralState _state;
     
@@ -482,6 +493,7 @@ private:
     bool        _adv_duplicate_filter_enabled;
 
     BLEDeviceEventHandler _device_events[BLEDeviceLastEvent];
+    PostponeEventBuffer<BLEDevicePostponeEvent> _postpone_events;
 };
 
 #endif
