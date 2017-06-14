@@ -43,6 +43,78 @@ extern "C" {
  * Definition of the drivers APIs accessible from any processor.
  * @ingroup drivers
  */
+    
+/**
+ * I2S audio formats.
+ */
+typedef enum {
+    SOC_I2S_AUDIO_FORMAT_I2S_MODE = 0, /**< I2S Mode audio format */
+    SOC_I2S_AUDIO_FORMAT_RIGHT_J,      /**< Right justified audio format */
+    SOC_I2S_AUDIO_FORMAT_LEFT_J,       /**< Left justified audio format */
+    SOC_I2S_AUDIO_FORMAT_DSP_MODE      /**< DSP mode audio format */
+} soc_i2s_audio_format_t;
+
+/**
+ * I2S Audio sample resolution. Resolution ranges between 12 bits and 32 bits.
+ */
+typedef enum {
+    /** 12 bits audio sample resolution */
+    SOC_I2S_12_BIT_SAMPLE_RESOLUTION = 12,
+    /** 13 bits audio sample resolution */
+    SOC_I2S_13_BIT_SAMPLE_RESOLUTION = 13,
+    /** 14 bits audio sample resolution */
+    SOC_I2S_14_BIT_SAMPLE_RESOLUTION = 14,
+    /** 15 bits audio sample resolution */
+    SOC_I2S_15_BIT_SAMPLE_RESOLUTION = 15,
+    /** 16 bits audio sample resolution */
+    SOC_I2S_16_BIT_SAMPLE_RESOLUTION = 16,
+    /** 17 bits audio sample resolution */
+    SOC_I2S_17_BIT_SAMPLE_RESOLUTION = 17,
+    /** 18 bits audio sample resolution */
+    SOC_I2S_18_BIT_SAMPLE_RESOLUTION = 18,
+    /** 19 bits audio sample resolution */
+    SOC_I2S_19_BIT_SAMPLE_RESOLUTION = 19,
+    /** 20 bits audio sample resolution */
+    SOC_I2S_20_BIT_SAMPLE_RESOLUTION = 20,
+    /** 21 bits audio sample resolution */
+    SOC_I2S_21_BIT_SAMPLE_RESOLUTION = 21,
+    /** 22 bits audio sample resolution */
+    SOC_I2S_22_BIT_SAMPLE_RESOLUTION = 22,
+    /** 23 bits audio sample resolution */
+    SOC_I2S_23_BIT_SAMPLE_RESOLUTION = 23,
+    /** 24 bits audio sample resolution */
+    SOC_I2S_24_BIT_SAMPLE_RESOLUTION = 24,
+    /** 25 bits audio sample resolution */
+    SOC_I2S_25_BIT_SAMPLE_RESOLUTION = 25,
+    /** 26 bits audio sample resolution */
+    SOC_I2S_26_BIT_SAMPLE_RESOLUTION = 26,
+    /** 27 bits audio sample resolution */
+    SOC_I2S_27_BIT_SAMPLE_RESOLUTION = 27,
+    /** 28 bits audio sample resolution */
+    SOC_I2S_28_BIT_SAMPLE_RESOLUTION = 28,
+    /** 29 bits audio sample resolution */
+    SOC_I2S_29_BIT_SAMPLE_RESOLUTION = 29,
+    /** 30 bits audio sample resolution */
+    SOC_I2S_30_BIT_SAMPLE_RESOLUTION = 30,
+    /** 31 bits audio sample resolution */
+    SOC_I2S_31_BIT_SAMPLE_RESOLUTION = 31,
+    /** 32 bits audio sample resolution */
+    SOC_I2S_32_BIT_SAMPLE_RESOLUTION = 32
+} soc_i2s_sample_resolution_t;
+
+/**
+ * I2S Audio rates available.
+ */
+typedef enum {
+    SOC_I2S_RATE_4000KHZ = 0, /**< 4kHz audio rate */
+    SOC_I2S_RATE_8000KHZ,     /**< 8kHz audio rate */
+    SOC_I2S_RATE_11025KHZ,    /**< 11.025kHz audio rate */
+    SOC_I2S_RATE_16000KHZ,    /**< 16kHz audio rate */
+    SOC_I2S_RATE_22050KHZ,    /**< 22.05kHz audio rate */
+    SOC_I2S_RATE_32000KHZ,    /**< 32kHz audio rate */
+    SOC_I2S_RATE_44100KHZ,    /**< 44.1kHz audio rate */
+    SOC_I2S_RATE_48000KHZ,    /**< 48kHz audio rate */
+} soc_i2s_audio_rate_t;
 
 /**
  * @defgroup soc_i2s Quark SE SOC I2S
@@ -204,6 +276,9 @@ DRIVER_API_RC soc_i2s_listen(void *buf, uint32_t len,  uint32_t len_per_data, ui
 DRIVER_API_RC soc_i2s_stop_listen(void);
 
 DRIVER_API_RC soc_i2s_init();
+
+uint32_t soc_i2s_get_rx_receive_address();
+uint32_t soc_i2s_get_tx_transmit_address();
 
 /** @} */
 

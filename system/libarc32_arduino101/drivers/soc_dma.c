@@ -473,8 +473,8 @@ static void dma_interrupt_handler(void *num)
 	} 
 	else if (MMIO_REG_VAL_FROM_BASE(SOC_DMA_BASE, SOC_DMA_STATUS_BLOCK) & (1 << (SOC_DMA_STATUS_STATUS + id))) 
 	{
-		if ((dma_info->channel[id]) && (dma_info->channel[id]->cfg.cb_block) && (curr->end_group)) 
-		{
+		if ((dma_info->channel[id]) && (dma_info->channel[id]->cfg.cb_block) ) 
+		{//&& (curr->end_group)
 			dma_info->channel[id]->cfg.cb_block(dma_info->channel[id]->cfg.cb_block_arg);
 		}
 
@@ -771,7 +771,7 @@ DRIVER_API_RC soc_dma_init()
 	// Setup ISRs (and enable)
 	for (int i = 0; i < SOC_DMA_NUM_CHANNELS; i++) 
 	{
-        	SET_INTERRUPT_HANDLER(dma_info->int_vector[i], dma_info->int_handler[i]);
+        SET_INTERRUPT_HANDLER(dma_info->int_vector[i], dma_info->int_handler[i]);
 		SOC_UNMASK_INTERRUPTS(dma_info->int_mask[i]);
 	}
 	SET_INTERRUPT_HANDLER(dma_info->err_vector, &dma_interrupt_err_handler);
@@ -789,5 +789,29 @@ DRIVER_API_RC soc_dma_init()
 	}
 
 	return DRV_RC_OK;
+}
+
+uint32_t soc_dma_get_channel_src_addr(struct soc_dma_channel *channel)
+{
+    uint32_t address = 0;
+
+    // Check channel to be sure its alright to configure
+    if (channel != NULL) 
+    {
+        address = MMIO_REG_VAL_FROM_BASE(SOC_DMA_BASE, dma_regs[channel->id].SAR);
+    } 
+    return address;
+}
+
+uint32_t soc_dma_get_channel_dest_addr(struct soc_dma_channel *channel)
+{
+    uint32_t address = 0;
+
+    // Check channel to be sure its alright to configure
+    if (channel != NULL) 
+    {
+        address = MMIO_REG_VAL_FROM_BASE(SOC_DMA_BASE, dma_regs[channel->id].DAR);
+    } 
+    return address;
 }
 

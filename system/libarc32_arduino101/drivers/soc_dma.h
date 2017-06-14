@@ -232,6 +232,9 @@ DRIVER_API_RC soc_dma_free_list(struct soc_dma_cfg *cfg);
 
 DRIVER_API_RC soc_dma_init();
 
+uint32_t soc_dma_get_channel_src_addr(struct soc_dma_channel *channel);
+uint32_t soc_dma_get_channel_dest_addr(struct soc_dma_channel *channel);
+
 #ifdef __cplusplus
 }
 #endif
